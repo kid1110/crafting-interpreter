@@ -1,2 +1,2 @@
 /*hello world*/
-print 123.sqrt();
+5+1-4;
