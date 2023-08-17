@@ -76,11 +76,17 @@ public class Scanner {
             case '+':
                 addToken(TokenType.PLUS);
                 break;
+            case ':':
+                addToken(TokenType.COLON);
+                break;
             case ';':
                 addToken(TokenType.SEMICOLON);
                 break;
             case '*':
                 addToken(TokenType.STAR);
+                break;
+            case '?':
+                addToken(TokenType.QUEM);
                 break;
             case '!':
                 addToken(match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
@@ -166,19 +172,21 @@ public class Scanner {
     private boolean isDigit(char c) {
         return c >= '0' && c <= '9';
     }
-    private void comment(){
-        while(peek() !='*' && peekNext() != '/' && !isAtEnd()){
-            if(peek() == '\n')
+
+    private void comment() {
+        while (peek() != '*' && peekNext() != '/' && !isAtEnd()) {
+            if (peek() == '\n')
                 line++;
             advance();
         }
-        if(isAtEnd()){
+        if (isAtEnd()) {
             Lox.error(line, "Unterminated comment.");
             return;
         }
         advance();
         advance();
     }
+
     private void string() {
         while (peek() != '"' && !isAtEnd()) {
             if (peek() == '\n')

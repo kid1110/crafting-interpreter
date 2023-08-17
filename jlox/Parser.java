@@ -29,7 +29,40 @@ public class Parser {
     }
 
     private Expr expression() {
-        return equality();
+        return questionMark();
+    }
+
+    private Expr questionMark() {
+        Expr expr = colon();
+        while (match(TokenType.QUEM)) {
+            Token opToken = previous();
+            Expr right = colon();
+            expr = new Expr.Binary(expr, opToken, right);
+        }
+        return expr;
+    }
+
+    private Expr colon() {
+        
+        Expr expr = commar();
+        while (match(TokenType.COLON)) {
+            System.out.println("colon!");
+            Token opToken = previous();
+            Expr right = commar();
+            expr = new Expr.Binary(expr, opToken, right);
+        }
+        return expr;
+    }
+
+    private Expr commar() {
+
+        Expr expr = equality();
+        while (match(TokenType.COMMA)) {
+            Token operator = previous();
+            Expr right = equality();
+            expr = new Expr.Binary(expr, operator, right);
+        }
+        return expr;
     }
 
     private Expr equality() {
