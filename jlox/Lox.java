@@ -50,15 +50,15 @@ public class Lox {
         List<Token> tokens = scanner.scanTokens();
         // System.out.println(tokens);
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        List<Stmt> statements = parser.parse();
         if (hadError)
             return;
         // System.out.println(new AstPrinter().print(expression));
-        interpreter.interpret(expression);
+        interpreter.interpret(statements);
     }
 
     static void runtimeError(RuntimeError error) {
-        System.out.println(error.getMessage() + "\n[line ]" + error.token.line + "]");
+        System.out.println(error.getMessage() + "\n[line " + error.token.line + "]");
         hadRuntimeError = true;
     }
 

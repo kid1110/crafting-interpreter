@@ -1,20 +1,25 @@
+import java.util.List;
 
-public class Interpreter implements Expr.Visitor<Object> {
-
-    void interpret(Expr expression){
-        try{
-            Object value = evalute(expression);
-            System.out.println(stringify(value));
-        }catch(RuntimeError error){
+public class Interpreter implements Expr.Visitor<Object>,
+                                    Stmt.Visitor<Void> {
+    private Environment environment = new Environment();
+    void interpret(List<Stmt> statements) {
+        try {
+            for(Stmt statement : statements){
+                excute(statement);
+            }
+        } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
     }
-    private String stringify(Object object){
-        if(object  == null) return "nil";
-        if(object instanceof Double){
+
+    private String stringify(Object object) {
+        if (object == null)
+            return "nil";
+        if (object instanceof Double) {
             String text = object.toString();
-            if(text.endsWith(".0")){
-                text = text.substring(0, text.length()-2);
+            if (text.endsWith(".0")) {
+                text = text.substring(0, text.length() - 2);
             }
             return text;
         }
@@ -47,6 +52,9 @@ public class Interpreter implements Expr.Visitor<Object> {
                 return (double) left - (double) right;
             case SLASH:
                 checkNumberOperand(expr.operator, left, right);
+                if ((Double) right == 0.0) {
+                    throw new RuntimeError(expr.operator, "the divisor cannot be 0");
+                }
                 return (double) left / (double) right;
             case STAR:
                 checkNumberOperand(expr.operator, left, right);
@@ -57,6 +65,12 @@ public class Interpreter implements Expr.Visitor<Object> {
                 }
                 if (left instanceof String && right instanceof String) {
                     return (String) left + (String) right;
+                }
+                if (left instanceof String && right instanceof Double) {
+                    return (String) left + stringify(right);
+                }
+                if (left instanceof Double && right instanceof String) {
+                    return stringify(left) + (String) right;
                 }
                 throw new RuntimeError(expr.operator, "Operands must be two numbers or two strings.");
         }
@@ -97,6 +111,21 @@ public class Interpreter implements Expr.Visitor<Object> {
     private Object evalute(Expr expr) {
         return expr.accept(this);
     }
+    private void excute(Stmt stmt){
+        stmt.accept(this);
+    }
+    void excuteBlock(List<Stmt> statements,Environment environment){
+        Environment previous = this.environment;
+        try{
+            this.environment = environment;
+            for(Stmt statement : statements){
+                excute(statement);
+            }
+        }finally{
+            this.environment = previous;
+        }
+    }
+
 
     private boolean isEqual(Object a, Object b) {
         if (a == null && b == null)
@@ -116,5 +145,46 @@ public class Interpreter implements Expr.Visitor<Object> {
         if (left instanceof Double && right instanceof Double)
             return;
         throw new RuntimeError(operator, "Operands must be numbers");
+    }
+
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        evalute(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        Object value = evalute(stmt.expression);
+        System.out.println(stringify(value));
+        return null;
+    }
+
+    @Override
+    public Void visitVarStmt(Stmt.Var stmt) {
+        Object value = null;
+        if(stmt.initializer != null){
+            value = evalute(stmt.initializer);
+        }
+        environment.define(stmt.name.lexeme, value);
+        return null;
+    }
+
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr) {
+        return environment.get(expr.name);
+    }
+
+    @Override
+    public Object visitAssignExpr(Expr.Assign expr) {
+       Object value = evalute(expr.value);
+       environment.assign(expr.name,value);
+       return value;
+    }
+
+    @Override
+    public Void visitBlockStmt(Stmt.Block stmt) {
+        excuteBlock(stmt.statements,new Environment(environment));
+        return null;
     }
 }

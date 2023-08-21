@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 
 // expression     → equality ;
@@ -20,50 +21,113 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    Expr parse() {
+    List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<>();
+        while (!isAtEnd()) {
+            statements.add(declaration());
+        }
+        return statements;
+    }
+
+    private Stmt declaration() {
         try {
-            return expression();
+            if (match(TokenType.VAR))
+                return VarDeclaration();
+            return statements();
         } catch (ParserError error) {
+            synchronize();
             return null;
         }
     }
 
+    private Stmt VarDeclaration() {
+        Token name = consume(TokenType.IDENTIFIER, "Expect variable name.");
+        Expr initializer = null;
+        if (match(TokenType.EQUAL)) {
+            initializer = expression();
+        }
+        consume(TokenType.SEMICOLON, "Expect ';' after variable declaration");
+        return new Stmt.Var(name, initializer);
+    }
+
     private Expr expression() {
-        return questionMark();
+        return assignment();
     }
 
-    private Expr questionMark() {
-        Expr expr = colon();
-        while (match(TokenType.QUEM)) {
-            Token opToken = previous();
-            Expr right = colon();
-            expr = new Expr.Binary(expr, opToken, right);
-        }
-        return expr;
-    }
-
-    private Expr colon() {
-        
-        Expr expr = commar();
-        while (match(TokenType.COLON)) {
-            System.out.println("colon!");
-            Token opToken = previous();
-            Expr right = commar();
-            expr = new Expr.Binary(expr, opToken, right);
-        }
-        return expr;
-    }
-
-    private Expr commar() {
-
+    private Expr assignment() {
         Expr expr = equality();
-        while (match(TokenType.COMMA)) {
-            Token operator = previous();
-            Expr right = equality();
-            expr = new Expr.Binary(expr, operator, right);
+        if (match(TokenType.EQUAL)) {
+            Token equal = previous();
+            Expr value = assignment();
+
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable) expr).name;
+                return new Expr.Assign(name, value);
+            }
+            error(equal, "Invalid assignment target");
         }
         return expr;
     }
+
+    private Stmt statements() {
+        if (match(TokenType.PRINT))
+            return printStatement();
+        if(match(TokenType.LEFT_BRACE)) return new Stmt.Block(block());
+        return expressionStatement();
+    }
+
+    private Stmt printStatement() {
+        Expr value = expression();
+        consume(TokenType.SEMICOLON, "Expect ';' after value.");
+        return new Stmt.Print(value);
+    }
+
+    private Stmt expressionStatement() {
+        Expr expr = expression();
+        consume(TokenType.SEMICOLON, "Expect ';' after expression");
+        return new Stmt.Expression(expr);
+    }
+    private List<Stmt> block(){
+        List<Stmt> statments = new ArrayList<>();
+        while(!check(TokenType.RIGHT_BRACE) && !isAtEnd()){
+            statments.add(declaration());
+        }
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+        return statments;
+    }
+
+    // private Expr questionMark() {
+    // Expr expr = colon();
+    // while (match(TokenType.QUEM)) {
+    // Token opToken = previous();
+    // Expr right = colon();
+    // expr = new Expr.Binary(expr, opToken, right);
+    // }
+    // return expr;
+    // }
+
+    // private Expr colon() {
+
+    // Expr expr = commar();
+    // while (match(TokenType.COLON)) {
+    // System.out.println("colon!");
+    // Token opToken = previous();
+    // Expr right = commar();
+    // expr = new Expr.Binary(expr, opToken, right);
+    // }
+    // return expr;
+    // }
+
+    // private Expr commar() {
+
+    // Expr expr = equality();
+    // while (match(TokenType.COMMA)) {
+    // Token operator = previous();
+    // Expr right = equality();
+    // expr = new Expr.Binary(expr, operator, right);
+    // }
+    // return expr;
+    // }
 
     private Expr equality() {
         Expr expr = comparison();
@@ -124,6 +188,9 @@ public class Parser {
             return new Expr.Literal(null);
         if (match(TokenType.NUMBER, TokenType.STRING)) {
             return new Expr.Literal(previous().literal);
+        }
+        if (match(TokenType.IDENTIFIER)) {
+            return new Expr.Variable(previous());
         }
         if (match(TokenType.LEFT_PAREN)) {
             Expr expr = expression();
