@@ -1,20 +1,13 @@
-/*hello world*/
-var a = "global a";
-var b = "global b";
-var c = "global c";
-{
-  var a = "outer a";
-  var b = "outer b";
-  {
-    var a = "inner a";
-    print a;
-    print b;
-    print c;
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
   }
-  print a;
-  print b;
-  print c;
+
+  return count;
 }
-print a;
-print b;
-print c;
+
+var counter = makeCounter();
+counter(); // "1".
+counter(); // "2";

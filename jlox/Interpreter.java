@@ -1,11 +1,35 @@
+import java.util.ArrayList;
 import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>,
-                                    Stmt.Visitor<Void> {
-    private Environment environment = new Environment();
+        Stmt.Visitor<Void> {
+    final Environment globals = new Environment();
+    private Environment environment = globals;
+
+    Interpreter() {
+        globals.define("clock", new LoxCallable() {
+
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return (double) System.currentTimeMillis(); // 1000.0
+            }
+
+            @Override
+            public String toString() {
+                return "<native fn>";
+            }
+
+        });
+    }
+
     void interpret(List<Stmt> statements) {
         try {
-            for(Stmt statement : statements){
+            for (Stmt statement : statements) {
                 excute(statement);
             }
         } catch (RuntimeError error) {
@@ -111,21 +135,22 @@ public class Interpreter implements Expr.Visitor<Object>,
     private Object evalute(Expr expr) {
         return expr.accept(this);
     }
-    private void excute(Stmt stmt){
+
+    private void excute(Stmt stmt) {
         stmt.accept(this);
     }
-    void excuteBlock(List<Stmt> statements,Environment environment){
+
+    void excuteBlock(List<Stmt> statements, Environment environment) {
         Environment previous = this.environment;
-        try{
+        try {
             this.environment = environment;
-            for(Stmt statement : statements){
+            for (Stmt statement : statements) {
                 excute(statement);
             }
-        }finally{
+        } finally {
             this.environment = previous;
         }
     }
-
 
     private boolean isEqual(Object a, Object b) {
         if (a == null && b == null)
@@ -163,7 +188,7 @@ public class Interpreter implements Expr.Visitor<Object>,
     @Override
     public Void visitVarStmt(Stmt.Var stmt) {
         Object value = null;
-        if(stmt.initializer != null){
+        if (stmt.initializer != null) {
             value = evalute(stmt.initializer);
         }
         environment.define(stmt.name.lexeme, value);
@@ -177,14 +202,77 @@ public class Interpreter implements Expr.Visitor<Object>,
 
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {
-       Object value = evalute(expr.value);
-       environment.assign(expr.name,value);
-       return value;
+        Object value = evalute(expr.value);
+        environment.assign(expr.name, value);
+        return value;
     }
 
     @Override
     public Void visitBlockStmt(Stmt.Block stmt) {
-        excuteBlock(stmt.statements,new Environment(environment));
+        excuteBlock(stmt.statements, new Environment(environment));
         return null;
+    }
+
+    @Override
+    public Void visitIfStmt(Stmt.If stmt) {
+        if (isTruthy(evalute(stmt.condition))) {
+            excute(stmt.thenBranch);
+        } else if (stmt.elseBranch != null) {
+            excute(stmt.elseBranch);
+        }
+        return null;
+    }
+
+    @Override
+    public Object visitLogicalExpr(Expr.Logical expr) {
+        Object left = evalute(expr.left);
+        if (expr.operator.type == TokenType.OR) {
+            if (isTruthy(left))
+                return left;
+        } else {
+            if (!isTruthy(left))
+                return left;
+        }
+        return evalute(expr.right);
+    }
+
+    @Override
+    public Void visitWhileStmt(Stmt.While stmt) {
+        while (isTruthy(evalute(stmt.condition))) {
+            excute(stmt.body);
+        }
+        return null;
+    }
+
+    @Override
+    public Object visitCallExpr(Expr.Call expr) {
+        Object callee = evalute(expr.callee);
+        List<Object> arguments = new ArrayList<>();
+        for (Expr argument : expr.arguments) {
+            arguments.add(evalute(argument));
+        }
+        if (!(callee instanceof LoxCallable)) {
+            throw new RuntimeError(expr.paren, "Can only call functions and classes");
+        }
+        LoxCallable function = (LoxCallable) callee;
+        if (arguments.size() != function.arity()) {
+            throw new RuntimeError(expr.paren,
+                    "Expected " + function.arity() + " arguments but got " + arguments.size() + ".");
+        }
+        return function.call(this, arguments);
+    }
+
+    @Override
+    public Void visitFunctionStmt(Stmt.Function stmt) {
+       LoxFunction function = new LoxFunction(stmt,environment);
+       environment.define(stmt.name.lexeme, function);
+       return null;
+    }
+
+    @Override
+    public Void visitReturnStmt(Stmt.Return stmt) {
+        Object value = null;
+        if(stmt.value  != null) value = evalute(stmt.value);
+        throw new Return(value);
     }
 }

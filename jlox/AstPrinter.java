@@ -46,6 +46,30 @@ public class AstPrinter implements Expr.Visitor<String>{
                 new Expr.Literal(45.67)));
         System.out.println(new AstPrinter().print(expre));
     }
+
+    @Override
+    public String visitAssignExpr(Expr.Assign expr) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitAssignExpr'");
+    }
+
+    @Override
+    public String visitCallExpr(Expr.Call expr) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitCallExpr'");
+    }
+
+    @Override
+    public String visitLogicalExpr(Expr.Logical expr) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitLogicalExpr'");
+    }
+
+    @Override
+    public String visitVariableExpr(Expr.Variable expr) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitVariableExpr'");
+    }
 }
 // expression     → literal
 //                | unary
