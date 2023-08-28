@@ -1,10 +1,9 @@
-var a = "global";
-{
-  fun showA() {
-    print a;
-  }
-
-  showA();
-  var a = "block";
-  showA();
+// 方式1
+fun callback(a, b, c) {
+  object.method(a, b, c);
 }
+
+takeCallback(callback);
+
+// 方式2
+takeCallback(object.method);
