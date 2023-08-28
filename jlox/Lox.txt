@@ -1,9 +1,6 @@
-// 方式1
-fun callback(a, b, c) {
-  object.method(a, b, c);
+class Eclair {
+  cook() {
+    super.cook();
+    print "Pipe full of crème pâtissière.";
+  }
 }
-
-takeCallback(callback);
-
-// 方式2
-takeCallback(object.method);
