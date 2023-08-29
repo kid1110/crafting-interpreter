@@ -25,4 +25,5 @@ replay_pid*
 
 
 # c program .o and execute file
-*.o main
+/c/*.o
+/c/main
