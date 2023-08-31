@@ -2,7 +2,6 @@
 #include <string.h>
 #include "common.h"
 #include "scanner.h"
-
 Scanner scanner;
 static char peek();
 static char advance();
