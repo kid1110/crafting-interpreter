@@ -4,6 +4,11 @@
 #include "scanner.h"
 
 Scanner scanner;
+static char peek();
+static char advance();
+static char peekNext();
+static TokenType identifierType();
+static TokenType checkKeyword(int start, int length, const char *rest, TokenType type);
 
 static bool isAtEnd()
 {
@@ -139,7 +144,7 @@ static TokenType identifierType()
         if(scanner.current-scanner.start >1){
             switch(scanner.start[1]){
                 case 'a': return checkKeyword(2,3,"lse",TOKEN_FALSE);
-                case 'o': return checkKeyword(2,1,'r',TOKEN_FOR);
+                case 'o': return checkKeyword(2,1,"r",TOKEN_FOR);
                 case 'u': return checkKeyword(2,1,"n",TOKEN_FUN);
             }
         }
