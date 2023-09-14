@@ -1,5 +1,5 @@
-main : main.o chunk.o memory.o debug.o value.o vm.o scanner.o compiler.o object.o
-	gcc -o main main.o chunk.o memory.o debug.o value.o vm.o scanner.o compiler.o object.o
+main : main.o chunk.o memory.o debug.o value.o vm.o scanner.o compiler.o object.o table.o
+	gcc -o main main.o chunk.o memory.o debug.o value.o vm.o scanner.o compiler.o object.o table.o
 
 main.o : main.c common.h chunk.h debug.h
 	gcc -c main.c
@@ -17,5 +17,7 @@ object.o: object.c common.h value.h
 	gcc -c object.c
 scanner.o : scanner.c scanner.h
 compiler.o : compiler.c compiler.h debug.h common.h scanner.h
+table.o: table.c table.h common.h
+	gcc -c table.c
 clean:
 	rm *.o main
