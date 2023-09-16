@@ -34,6 +34,19 @@ static void binary();
 static void string();
 bool compile(const char *source, Chunk *chunk);
 static void literal();
+static void statement();
+static void declaration();
+static bool check(TokenType type);
+static bool match(TokenType type);
+static void printStatement();
+static uint8_t parseVariable(const char* errorMessage);
+static void variable();
+static void expressionStatement();
+static uint8_t identifierConstant();
+static void synchronize();
+static void defineVariable(uint8_t global);
+static void namedVariable(Token name);
+static void varDeclaration();
 
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN] = {grouping, NULL, PREC_NONE},
@@ -55,7 +68,7 @@ ParseRule rules[] = {
     [TOKEN_GREATER_EQUAL] = {NULL, binary, PREC_COMPARISON},
     [TOKEN_LESS] = {NULL, binary, PREC_COMPARISON},
     [TOKEN_LESS_EQUAL] = {NULL, binary, PREC_COMPARISON},
-    [TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
+    [TOKEN_IDENTIFIER] = {variable, NULL, PREC_NONE},
     [TOKEN_STRING] = {string, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, NULL, PREC_NONE},
@@ -86,7 +99,90 @@ static void literal(){
         default: return;
     }
 }
-
+static void declaration(){
+    if(match(TOKEN_VAR)){
+        varDeclaration();
+    }else{
+        statement();
+    }
+    if(parser.panicMode) synchronize();
+}
+static void varDeclaration(){
+    uint8_t global = parseVariable("Expect variable name.");
+    if(match(TOKEN_EQUAL)){
+        expression();
+    }else{
+        emitByte(OP_NIL);
+    }
+    consume(TOKEN_SEMICOLON,"Expect ';' after variable declaration.");
+    defineVariable(global);
+}
+static void variable(){
+    namedVariable(parser.previous);
+}
+static void namedVariable(Token name){
+    uint8_t arg = identifierConstant(&name);
+    emitBytes(OP_GET_GLOBAL,arg);
+}
+static uint8_t parseVariable(const char* errorMessage){
+    
+    consume(TOKEN_IDENTIFIER,errorMessage);
+    return identifierConstant(&parser.previous);
+}
+static void defineVariable(uint8_t global){
+    emitBytes(OP_DEFINE_GLOBAL,global);
+}
+static uint8_t identifierConstant(Token* name){
+    return makeConstant(OBJ_VAL(copyString(name->start,name->length)));
+}
+static void synchronize(){
+    parser.panicMode =  false;
+    while (parser.current.type != TOKEN_EOF)
+    {
+        if(parser.previous.type == TOKEN_SEMICOLON) return;
+        switch(parser.current.type){
+            case TOKEN_CLASS:
+            case TOKEN_FUN:
+            case TOKEN_VAR:
+            case TOKEN_FOR:
+            case TOKEN_IF:
+            case TOKEN_WHILE:
+            case TOKEN_PRINT:
+            case TOKEN_RETURN:
+                return;
+            default:
+                ;
+        }
+        advance();
+    }
+    
+}
+static void statement(){
+    if(match(TOKEN_PRINT)){
+        printStatement();
+    }else{
+        
+        expressionStatement();
+    }
+}
+static void expressionStatement(){
+    expression();
+    consume(TOKEN_SEMICOLON,"Expect ';' after expression.");
+    emitByte(OP_POP);
+}
+static bool match(TokenType type){
+    if(!check(type)) return false;
+    advance();
+    return true;
+}
+static bool check(TokenType type){
+    return parser.current.type == type;
+}
+static void printStatement(){
+    expression();
+    consume(TOKEN_SEMICOLON,"Expect ';' aftr value.");
+    emitByte(OP_PRINT);
+}
 static Chunk *currentChunk()
 {
     return compilingChunk;
@@ -174,13 +270,14 @@ static void emitConstant(Value value)
 }
 
 static uint8_t makeConstant(Value value)
-{
+{   
     int constant = addConstant(currentChunk(), value);
     if (constant > UINT8_MAX)
     {
         error("Too many constants in one chunk");
         return 0;
     }
+    
     return (uint8_t)constant;
 }
 
@@ -226,7 +323,7 @@ static void parsePrecedence(Precedence precedence)
 
 }
 static void expression()
-{
+{   
     // TODO expression();
     parsePrecedence(PREC_ASSIGNMENT);
 }
@@ -275,7 +372,11 @@ bool compile(const char *source, Chunk *chunk)
     parser.hadError = false;
     parser.panicMode = false;
     advance();
-    expression();
+    while (!match(TOKEN_EOF))
+    {   
+        declaration();
+    }
+    
     consume(TOKEN_EOF, "Expect end of expression.");
     endCompiler();
     return !parser.hadError;

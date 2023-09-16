@@ -4,6 +4,8 @@
 #include "common.h"
 #include "chunk.h"
 #include "debug.h"
+#include "value.h"
+#include "object.h"
 #include "vm.h"
 
 static void repl()
@@ -72,6 +74,13 @@ int main(int argc, const char *argv[])
         exit(64);
     }
     freeVM();
-
+    // Table test;
+    // initTable(&test);
+    // ObjString* key= takeString("hello",5);
+    // Value value = NUMBER_VAL(1);
+    // Value ret;
+    // tableSet(&test,key,value);
+    // tableGet(&test,key,&ret);
+    // printValue(ret);
     return 0;
 }
