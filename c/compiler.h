@@ -3,7 +3,7 @@
 #include "vm.h"
 #include "scanner.h"
 
-typedef void (*ParseFn)();
+typedef void (*ParseFn)(bool canAssign);
 
 typedef struct
 {
