@@ -90,10 +90,8 @@ static InterpretResult run()
             break;
         }
         case OP_DEFINE_GLOBAL:{
-            printf("==============\n");
             ObjString* name = READ_STRING();
             printValue(peek(0));
-            printf("==============\n");
             tableSet(&vm.globals,name,peek(0));
             pop();
             break;
@@ -150,7 +148,7 @@ static InterpretResult run()
         }
         case OP_GREATER: BINARY_OP(BOOL_VAL,>);break;
         case OP_LESS:    BINARY_OP(BOOL_VAL,<);break;
-        
+    
         }
     }
 #undef READ_BYTE
@@ -178,12 +176,13 @@ void initVM()
 {
     resetStack();
     vm.objects = NULL;
-    initTable(&vm.strings);
     initTable(&vm.globals);
+    initTable(&vm.strings);
+    
 }
 void freeVM()
-{   freeTable(&vm.strings);
-    freeTable(&vm.globals);
+{   freeTable(&vm.globals);
+    freeTable(&vm.strings);
     freeObjects();
 }
 
