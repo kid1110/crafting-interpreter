@@ -2,6 +2,7 @@
 #define clox_compiler_h
 #include "vm.h"
 #include "scanner.h"
+#include "common.h"
 
 typedef void (*ParseFn)(bool canAssign);
 
@@ -33,6 +34,20 @@ typedef struct
     ParseFn infix;
     Precedence precedence;
 } ParseRule;
+
+typedef struct 
+{
+    Token name;
+    int depth;
+} Local;
+
+typedef struct 
+{
+    Local locals[UINT8_COUNT];
+    int localCount;
+    int scopeDepth;
+}Compiler;
+
 
 
 
