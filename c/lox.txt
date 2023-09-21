@@ -1,10 +1,3 @@
-var breakfast = "beignets";
-var beverage = "cafe au lait";
-breakfast = "beignets with " + beverage;
-{
-    var a = "test";
-    var b = "local";
-    b = "t";
-    print a+b;
+for(var a = 2;a >=0;a = a-1){
+    print"hello world";
 }
-print breakfast;
