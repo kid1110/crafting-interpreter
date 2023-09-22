@@ -1,3 +1,7 @@
-for(var a = 2;a >=0;a = a-1){
-    print"hello world";
+fun fib(n){
+    if(n <2) return n;
+    return fib(n-2)+fib(n-1);
 }
+var start = clock();
+fib(30);
+print clock()-start;
