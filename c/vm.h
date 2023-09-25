@@ -10,7 +10,7 @@
 
 typedef struct
 {
-    ObjFunction* function;
+    ObjClosure* closure;
     uint8_t* ip;
     Value* slots;
 }CallFrame;
@@ -25,6 +25,7 @@ typedef struct
     Table strings;
     Obj* objects;
     Table globals;
+    ObjUpvalue* openUpvalues;
 }VM;
 
 

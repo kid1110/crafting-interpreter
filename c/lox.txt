@@ -1,7 +1,11 @@
-fun fib(n){
-    if(n <2) return n;
-    return fib(n-2)+fib(n-1);
+fun outer() {
+  var x = "outside";
+  fun inner() {
+    print x;
+  }
+
+  return inner;
 }
-var start = clock();
-fib(30);
-print clock()-start;
+
+var closure = outer();
+closure();

@@ -46,8 +46,12 @@ typedef struct
 {
     Token name;
     int depth;
+    bool isCaptured;
 } Local;
-
+typedef struct{
+    uint8_t index;
+    bool isLocal;
+}Upvalue;
 typedef struct Compiler
 {   
     struct Compiler* enclosing;
@@ -56,6 +60,7 @@ typedef struct Compiler
     Local locals[UINT8_COUNT];
     int localCount;
     int scopeDepth;
+    Upvalue upvalues[UINT8_COUNT];
 } Compiler;
 
 ObjFunction* compile(const char *source);
