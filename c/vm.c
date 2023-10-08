@@ -89,8 +89,9 @@ static bool callValue(Value callee,int argCount){
     return false;
 }
 static void concatenate(){
-    ObjString* b = AS_STRING(pop());
-    ObjString* a = /* condition */AS_STRING(pop());
+    ObjString* b = AS_STRING(peek(0));
+    ObjString* a = AS_STRING(peek(1));
+
 
     int length = a->length+b->length;
     char* chars = ALLOCATE(char,length+1);
@@ -98,6 +99,8 @@ static void concatenate(){
     memcpy(chars+a->length,b->chars,b->length);
     chars[length] = '\0';
     ObjString* result = takeString(chars,length);
+    pop();
+    pop();
     push(OBJ_VAL(result));
 
 }
@@ -130,7 +133,7 @@ static InterpretResult run()
             printValue(*slot);
             printf(" ]");
         }
-        disassembleInstruction(&frame->closure->function->chunk, (int)(frame->ip - frame->function->chunk.code));
+        disassembleInstruction(&frame->closure->function->chunk, (int)(frame->ip - frame->closure->function->chunk.code));
 #endif
         uint8_t instruction;
         switch (instruction = READ_BYTE())
@@ -328,6 +331,11 @@ void initVM()
 {
     resetStack();
     vm.objects = NULL;
+    vm.grayCount = 0;
+    vm.bytesAllocated = 0;
+    vm.nextGC = 1024*1024;
+    vm.grayCapacity = 0;
+    vm.grayStack = NULL;
     initTable(&vm.globals);
     initTable(&vm.strings);
     defineNative("clock",clockNative);
