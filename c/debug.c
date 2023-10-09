@@ -62,8 +62,14 @@ int disassembleInstruction(Chunk *chunk, int offset)
         return simpleInstruction("OP_DIVIDE",offset);
     case OP_NIL:
         return simpleInstruction("OP_NIL",offset);
+    case OP_SET_PROPERTY:
+        return constantInstruction("OP_SET_PROPERTY",chunk,offset);
+    case OP_GET_PROPERTY:
+        return constantInstruction("OP_GET_PROPERTY",chunk,offset);
     case OP_TRUE:
         return simpleInstruction("OP_TRUE",offset);
+    case OP_CLASS:
+        return constantInstruction("OP_CLASS",chunk,offset);
     case OP_FALSE:
         return simpleInstruction("OP_FALSE",offset);
     case OP_NOT:

@@ -4,7 +4,13 @@
 #include "common.h"
 #include "value.h"
 #include "chunk.h"
+#include "table.h"
 
+
+#define IS_INSTANCE(value) isObjType(value,OBJ_INSTANCE)
+#define AS_INSTANCE(value) ((ObjInstance*)AS_OBJ(value))
+#define IS_CLASS(value) ((ObjClass*)AS_OBJ(value))
+#define AS_CLASS(value) ((ObjClass*)AS_OBJ(value))
 #define AS_FUNCTION(value) ((ObjFunction*) AS_OBJ(value))
 #define OBJ_TYPE(value) (AS_OBJ(value)->type)
 #define IS_STRING(value) isObjType(value,OBJ_STRING)
@@ -21,7 +27,9 @@ typedef enum{
     OBJ_FUNCTION,
     OBJ_NATIVE,
     OBJ_CLOSURE,
-    OBJ_UPVALUE
+    OBJ_UPVALUE,
+    OBJ_CLASS,
+    OBJ_INSTANCE
 }ObjType;
 
 
@@ -56,6 +64,20 @@ typedef struct
     int upvalueCount;
 }ObjClosure;
 
+typedef struct {
+    Obj obj;
+    ObjString* name;
+
+}ObjClass;
+
+typedef struct 
+{
+    Obj obj;
+    ObjClass* klass;
+    Table fields;
+}ObjInstance;
+
+
 typedef Value (*NativeFn)(int argCount,Value* args);
 typedef struct 
 {
@@ -76,11 +98,13 @@ ObjFunction* newFunction();
 static inline bool isObjType(Value value,ObjType type){
     return IS_OBJ(value) && AS_OBJ(value)->type == type;
 }
-
+ObjClass* newClass(ObjString* name);
 ObjString* takeString(char* chars,int length);
 ObjString* copyString(const char* chars,int length);
 ObjClosure* newClosure(ObjFunction* function);
 ObjNative* newNative(NativeFn function);
 ObjUpvalue* newUpvalue(Value* slot);
+ObjInstance* newInstance(ObjClass* klass);
+
 void printObject(Value value);
 #endif
