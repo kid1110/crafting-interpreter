@@ -7,6 +7,8 @@
 #include "table.h"
 
 
+#define IS_BOUND_METHOD(value) isObjType(value,OBJ_BOUND_METHOD)
+#define AS_BOUND_METHOD(value) ((ObjBoundMethod*)AS_OBJ(value))
 #define IS_INSTANCE(value) isObjType(value,OBJ_INSTANCE)
 #define AS_INSTANCE(value) ((ObjInstance*)AS_OBJ(value))
 #define IS_CLASS(value) ((ObjClass*)AS_OBJ(value))
@@ -29,7 +31,8 @@ typedef enum{
     OBJ_CLOSURE,
     OBJ_UPVALUE,
     OBJ_CLASS,
-    OBJ_INSTANCE
+    OBJ_INSTANCE,
+    OBJ_BOUND_METHOD
 }ObjType;
 
 
@@ -67,7 +70,7 @@ typedef struct
 typedef struct {
     Obj obj;
     ObjString* name;
-
+    Table methods;
 }ObjClass;
 
 typedef struct 
@@ -76,6 +79,13 @@ typedef struct
     ObjClass* klass;
     Table fields;
 }ObjInstance;
+
+typedef struct 
+{
+    Obj obj;
+    Value receiver;
+    ObjClosure* method;
+}ObjBoundMethod;
 
 
 typedef Value (*NativeFn)(int argCount,Value* args);
@@ -105,6 +115,7 @@ ObjClosure* newClosure(ObjFunction* function);
 ObjNative* newNative(NativeFn function);
 ObjUpvalue* newUpvalue(Value* slot);
 ObjInstance* newInstance(ObjClass* klass);
+ObjBoundMethod* newBoundMethod(Value receiver,ObjClosure* method);
 
 void printObject(Value value);
 #endif

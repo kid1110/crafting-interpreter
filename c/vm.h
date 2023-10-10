@@ -31,7 +31,7 @@ typedef struct
     Obj** grayStack;
     size_t bytesAllocated;
     size_t nextGC;
-    
+    ObjString* initString;
 }VM;
 
 
