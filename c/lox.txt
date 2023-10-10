@@ -1,15 +1,19 @@
-class CoffeeMaker {
-  init(coffee) {
-    this.coffee = coffee;
-  }
-
-  brew() {
-    print "Enjoy your cup of " + this.coffee;
-
-    // No reusing the grounds!
-    this.coffee = nil;
+class A {
+  method() {
+    print "A method";
   }
 }
 
-var maker = CoffeeMaker("coffee and chicory");
-maker.brew();
+class B < A {
+  method() {
+    print "B method";
+  }
+
+  test() {
+    super.method();
+  }
+}
+
+class C < B {}
+
+C().test();

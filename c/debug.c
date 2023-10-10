@@ -80,12 +80,18 @@ int disassembleInstruction(Chunk *chunk, int offset)
         return simpleInstruction("OP_TRUE",offset);
     case OP_CLASS:
         return constantInstruction("OP_CLASS",chunk,offset);
+    case OP_INHERIT:
+        return simpleInstruction("OP_INHERIT",offset);
     case OP_FALSE:
         return simpleInstruction("OP_FALSE",offset);
+    case OP_GET_SUPER:
+        return constantInstruction("OP_GET_SUPER",chunk,offset);
     case OP_METHOD:
         return constantInstruction("OP_METHOD",chunk,offset);
     case OP_NOT:
         return simpleInstruction("OP_NOT",offset);
+    case OP_SUPER_INVOKE:
+        return invokenInstruction("OP_SUPER_INVOKE",chunk,offset);
     case OP_EQUAL:
         return simpleInstruction("OP_EQUAL",offset);
     case OP_GREATER:
